@@ -48,8 +48,8 @@ fi
 if conda env list | awk '{print $1}' | grep -qx "$ENV_NAME"; then
   echo ">>> Env '$ENV_NAME' already exists, skipping create"
 else
-  echo ">>> Creating env '$ENV_NAME' from environment.yml"
-  conda env create -f "$SCRIPT_DIR/environment.yml"
+  echo ">>> Creating env '$ENV_NAME' from environment.yaml"
+  conda env create -f "$SCRIPT_DIR/environment.yaml"
 fi
 
 conda activate "$ENV_NAME"
