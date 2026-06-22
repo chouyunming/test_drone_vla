@@ -13,6 +13,9 @@ Usage:
 import argparse
 import sys
 import time
+import warnings
+
+warnings.filterwarnings("ignore", message="`torch_dtype` is deprecated")
 
 import torch
 
@@ -81,6 +84,18 @@ def main() -> int:
         print(f"[3/4] Loading built-in dataset: {dataset_id} (first frame)")
         dataset = LeRobotDataset(dataset_id)
         frame = dict(dataset[0])
+
+        # Remap dataset image keys to whatever names the policy checkpoint expects.
+        # E.g. smolvla_base uses camera1/2/3 but lerobot/libero uses image/image2.
+        if hasattr(policy.config, "input_features"):
+            policy_img_keys = [
+                k for k, v in policy.config.input_features.items()
+                if hasattr(v, "type") and "VISUAL" in str(v.type)
+            ]
+            frame_img_keys = [k for k in frame if k.startswith("observation.images.")]
+            for i, dst in enumerate(policy_img_keys):
+                if dst not in frame and frame_img_keys:
+                    frame[dst] = frame[frame_img_keys[i % len(frame_img_keys)]]
 
         print("[4/4] Running select_action")
         batch = preprocess(frame)
