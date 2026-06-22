@@ -5,8 +5,7 @@
 
 set -euo pipefail
 
-CONDA_DIR="${CONDA_DIR:-$HOME/miniconda3}"
-ENV_NAME="lerobot-vla-test"
+ENV_NAME="lerobot_vla_test"
 INSTALL_FLASH_ATTN=0
 
 for arg in "$@"; do
@@ -18,6 +17,14 @@ for arg in "$@"; do
 done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONDA_DIR="${CONDA_DIR:-$SCRIPT_DIR/miniconda3}"
+
+# 0. System deps check (evdev needs linux/input.h to build from source)
+if [ ! -f /usr/include/linux/input.h ]; then
+  echo "ERROR: Kernel headers missing. Run first:" >&2
+  echo "  sudo apt-get install -y linux-libc-dev" >&2
+  exit 1
+fi
 
 # 1. Miniconda
 if command -v conda >/dev/null 2>&1; then
@@ -52,13 +59,15 @@ else
   conda env create -f "$SCRIPT_DIR/environment.yaml"
 fi
 
-conda activate "$ENV_NAME"
+set +u; conda activate "$ENV_NAME"; set -u
 
 # 3. flash-attn (GR00T only)
 if [ "$INSTALL_FLASH_ATTN" -eq 1 ]; then
   echo ">>> Installing flash-attn"
   pip install "flash-attn>=2.5.9,<3.0.0" --no-build-isolation
   python -c "import flash_attn; print('flash-attn', flash_attn.__version__, 'OK')"
+  echo ">>> Installing lerobot[groot]"
+  pip install "lerobot[groot]"
 fi
 
 # Done

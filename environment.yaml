@@ -1,4 +1,4 @@
-name: lerobot-vla-test
+name: lerobot_vla_test
 channels:
   - pytorch
   - nvidia
@@ -11,13 +11,13 @@ dependencies:
   - ninja                           # flash-attn build helper (GR00T only)
   # PyTorch (GPU build; required for GR00T, also fine for SmolVLA).
   # For a CPU-only machine testing SmolVLA, see the note in QUICKSTART.md.
-  - pytorch::pytorch>=2.2.1,<2.8.0
-  - pytorch::torchvision>=0.21.0,<0.23.0
+  - pytorch::pytorch>=2.2.1,<2.6.0
+  - pytorch::torchvision>=0.17.0,<0.21.0
   - pytorch::pytorch-cuda=12.1
   - pip:
     - packaging>=24.2,<26.0
     - "lerobot[smolvla]"            # SmolVLA inference deps
-    - "lerobot[groot]"              # GR00T N1.5 inference deps (flash-attn excluded)
+    # lerobot[groot] is installed by setup.sh --groot after flash-attn is built
     # NOTE: flash-attn is NOT listed here on purpose. It must be built against the
     # already-installed torch with build isolation disabled, which conda/pip cannot
     # guarantee inside this file. After creating the env, GR00T users run:
