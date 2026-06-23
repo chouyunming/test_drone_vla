@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Inference smoke test for LeRobot VLA policies (SmolVLA, GR00T N1.5).
+"""Inference smoke test for LeRobot VLA policies (SmolVLA).
 
 Loads an open pretrained policy + an open built-in LeRobotDataset, runs a single
 forward pass through `select_action`, and reports whether inference ran.
@@ -7,15 +7,19 @@ No robot hardware required.
 
 Usage:
     python test.py --model smolvla
-    python test.py --model groot          # needs CUDA + flash-attn
 """
 
 import argparse
+import logging
 import sys
 import time
 import warnings
 
 warnings.filterwarnings("ignore", message="`torch_dtype` is deprecated")
+
+logging.getLogger("transformers").addFilter(
+    lambda r: "`torch_dtype` is deprecated" not in r.getMessage()
+)
 
 import torch
 
@@ -28,23 +32,14 @@ MODELS = {
         "model_id": "lerobot/smolvla_base",   # open, ~0.5B params
         "dataset": "lerobot/libero",          # open, built-in
     },
-    "groot": {
-        "model_id": "nvidia/GR00T-N1.5-3B",   # gated base: accept NVIDIA license + `hf auth login`
-        "dataset": "HuggingFaceVLA/libero",   # open, built-in
-    },
 }
 
 
 def load_policy(name: str, model_id: str):
-    """Import the policy class lazily so SmolVLA works even without the groot extra."""
     if name == "smolvla":
         from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
 
         return SmolVLAPolicy.from_pretrained(model_id)
-    if name == "groot":
-        from lerobot.policies.groot.modeling_groot import GrootPolicy
-
-        return GrootPolicy.from_pretrained(model_id)
     raise ValueError(f"Unknown model: {name}")
 
 
@@ -64,11 +59,6 @@ def main() -> int:
     model_id = args.model_id or cfg["model_id"]
     dataset_id = args.dataset or cfg["dataset"]
     device = torch.device(args.device)
-
-    if args.model == "groot" and device.type != "cuda":
-        print("GR00T N1.5 requires a CUDA GPU (it depends on flash-attn). "
-              "Run with --device cuda.", file=sys.stderr)
-        return 1
 
     try:
         print(f"[1/4] Loading policy: {model_id} -> {device}")

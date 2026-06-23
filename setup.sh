@@ -1,16 +1,13 @@
 #!/usr/bin/env bash
 # Usage:
 #   bash setup.sh            # SmolVLA only
-#   bash setup.sh --groot    # also build flash-attn for GR00T
 
 set -euo pipefail
 
 ENV_NAME="lerobot_vla_test"
-INSTALL_FLASH_ATTN=0
 
 for arg in "$@"; do
   case "$arg" in
-    --groot) INSTALL_FLASH_ATTN=1 ;;
     -h|--help) grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "Unknown arg: $arg (try --help)"; exit 1 ;;
   esac
@@ -61,15 +58,6 @@ fi
 
 set +u; conda activate "$ENV_NAME"; set -u
 
-# 3. flash-attn (GR00T only)
-if [ "$INSTALL_FLASH_ATTN" -eq 1 ]; then
-  echo ">>> Installing flash-attn"
-  pip install "flash-attn>=2.5.9,<3.0.0" --no-build-isolation
-  python -c "import flash_attn; print('flash-attn', flash_attn.__version__, 'OK')"
-  echo ">>> Installing lerobot[groot]"
-  pip install "lerobot[groot]"
-fi
-
 # Done
 cat <<DONE
 
@@ -84,19 +72,6 @@ Run the SmolVLA test:
   python test.py --model smolvla
 DONE
 
-if [ "$INSTALL_FLASH_ATTN" -eq 1 ]; then
-  cat <<DONE
-
-For GR00T (CUDA only):
-  hf auth login
-  python test.py --model groot --device cuda
+cat <<DONE
 ============================================================
 DONE
-else
-  cat <<DONE
-
-For GR00T, re-run with:
-  bash setup.sh --groot
-============================================================
-DONE
-fi
