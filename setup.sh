@@ -90,9 +90,8 @@ _setup_smolvla() {
 
   # 0. System headers check (evdev needs linux/input.h)
   if [ ! -f /usr/include/linux/input.h ]; then
-    echo "ERROR: Kernel headers missing. Run first:" >&2
-    echo "  sudo apt-get install -y linux-libc-dev build-essential" >&2
-    exit 1
+    echo ">>> Installing kernel headers and build tools"
+    sudo apt-get install -y --no-install-recommends linux-libc-dev build-essential
   fi
 
   _ensure_conda

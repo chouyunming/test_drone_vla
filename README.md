@@ -12,6 +12,43 @@ forward pass, and prints `INFERENCE OK`. No robot hardware required.
 
 ---
 
+## Tested Hardware
+
+The configuration below was used to develop and validate this repo:
+
+| Component | Details |
+| --- | --- |
+| **OS** | Ubuntu 24.04.4 LTS (Noble Numbat), x86\_64 |
+| **GPU** | NVIDIA RTX PRO 6000 Blackwell, 96 GB VRAM |
+| **NVIDIA Driver** | 580.159.03 |
+| **CUDA (driver-reported)** | 13.0 |
+| **GCC** | 11.5.0 (Ubuntu 11.5.0-1ubuntu1\~24.04.1) |
+
+> A GPU with ≥ 8 GB VRAM is sufficient for both models.
+
+---
+
+## Software Versions at a Glance
+
+These are the exact versions pinned per environment — useful if you hit a
+dependency conflict and need to know what "known-good" looks like:
+
+| | SmolVLA (`smolvla` env) | GR00T-N1.6 (`Isaac-GR00T` env) |
+| --- | --- | --- |
+| **Python** | 3.11 | 3.10 |
+| **PyTorch** | ≥ 2.2.1, < 2.6.0 | 2.7.1+cu128 |
+| **torchvision** | ≥ 0.17.0, < 0.21.0 | bundled with torch |
+| **CUDA toolkit** | 12.1 (via conda) | 12.8 (via PyTorch cu128 wheel) |
+| **flash-attn** | not used | prebuilt wheel (Python 3.10 + CUDA 12) |
+| **lerobot** | latest (`lerobot[smolvla]`) | not used |
+| **Isaac-GR00T** | not used | `n1.6-release` branch |
+
+> **Beginner tip:** you do not need to install any of these manually.
+> `setup.sh` creates isolated Conda environments and installs the correct
+> versions for you automatically.
+
+---
+
 ## Prerequisites
 
 - **Ubuntu 24.04 LTS, x86_64.**
@@ -19,15 +56,6 @@ forward pass, and prints `INFERENCE OK`. No robot hardware required.
   CUDA GPU** — it will refuse to run on CPU.
 - `wget` or `curl`, plus an internet connection (first run downloads several GB).
 - **Python is NOT required up front** — `setup.sh` installs it via Miniconda.
-
-### System packages (SmolVLA)
-
-The `evdev` package pulled in by lerobot needs Linux kernel headers and a C
-compiler:
-
-```bash
-sudo apt-get install -y linux-libc-dev build-essential
-```
 
 ### GR00T — NVIDIA license
 
@@ -185,8 +213,6 @@ python test.py --model groot \
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
-| `linux/input.h: No such file` | Kernel headers missing | `sudo apt-get install -y linux-libc-dev` |
-| `gcc: command not found` | C compiler missing | `sudo apt-get install -y build-essential` |
 | `PackagesNotFoundError: torchvision` | Wrong version constraint in environment.yaml | Already fixed — update to the latest `environment.yaml` |
 | `MKL_INTERFACE_LAYER: unbound variable` during activate | MKL activation script + `set -u` | Already fixed in `setup.sh` — update to the latest version |
 | `ERROR: GR00T-N1.6 requires a CUDA-capable GPU` | No NVIDIA GPU / driver | Install the NVIDIA driver; GR00T-N1.6 does not support CPU |
