@@ -10,7 +10,7 @@ Usage:
     conda activate lerobot_vla_test
     python test.py --model smolvla
 
-    # GR00T-N1.6 — uses nvidia/GR00T-N1.6-DROID + synthetic obs
+    # GR00T-N1.6 — uses nvidia/GR00T-N1.6-DROID + synthetic obs (CUDA required)
     conda activate groot_vla_test
     python test.py --model groot
 
@@ -19,9 +19,8 @@ Usage:
         --model-id nvidia/GR00T-N1.6-3B \\
         --embodiment-tag gr1
 
-    # Force CPU
+    # Force CPU (SmolVLA only — GR00T-N1.6 requires CUDA)
     python test.py --model smolvla --device cpu
-    python test.py --model groot   --device cpu
 """
 
 import argparse
@@ -194,6 +193,14 @@ def _make_groot_obs(policy, state_dims: dict[str, int]) -> dict:
 
 
 def _run_groot(args, device: torch.device) -> int:
+    if device.type != "cuda":
+        print(
+            f"ERROR: GR00T-N1.6 requires a CUDA GPU (got --device {device}).\n"
+            "       Install CUDA drivers and re-run without --device, or pass --device cuda.",
+            file=sys.stderr,
+        )
+        return 1
+
     import numpy as np
 
     cfg            = MODELS["groot"]

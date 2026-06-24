@@ -131,7 +131,16 @@ _setup_groot() {
   echo " Setting up GR00T-N1.6 environment (Isaac-GR00T)"
   echo "============================================================"
 
-  # --- 3a. System deps ---
+  # --- 3a. CUDA availability check ---
+  if ! command -v nvidia-smi >/dev/null 2>&1 || ! nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | grep -q .; then
+    echo "ERROR: GR00T-N1.6 requires a CUDA-capable GPU." >&2
+    echo "       No NVIDIA GPU detected (nvidia-smi found no devices)." >&2
+    echo "       Install the NVIDIA driver and re-run this script." >&2
+    exit 1
+  fi
+  echo ">>> CUDA GPU detected: $(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)"
+
+  # --- 3b. System deps ---
   echo ">>> Checking / installing system dependencies"
   local MISSING_PKGS=""
   for pkg in ffmpeg git-lfs; do
@@ -151,7 +160,7 @@ _setup_groot() {
 
   git lfs install --skip-repo 2>/dev/null || true
 
-  # --- 3b. Conda env ---
+  # --- 3c. Conda env ---
   _ensure_conda
 
   local ENV_NAME="Isaac-GR00T"
@@ -164,7 +173,7 @@ _setup_groot() {
 
   set +u; conda activate "$ENV_NAME"; set -u
 
-  # --- 3c. PyTorch with CUDA 12.8 support ---
+  # --- 3d. PyTorch with CUDA 12.8 support ---
   # GR00T requires torch==2.7.1 built against CUDA 12.8.
   # Install from the pytorch-cu128 index before gr00t so that pip sees the
   # CUDA-enabled wheel and won't pull the CPU-only build from PyPI later.
@@ -178,7 +187,7 @@ _setup_groot() {
       --index-url https://download.pytorch.org/whl/cu128
   fi
 
-  # --- 3d. flash-attn prebuilt wheel (Python 3.10 + CUDA 12 + torch 2.7) ---
+  # --- 3e. flash-attn prebuilt wheel (Python 3.10 + CUDA 12 + torch 2.7) ---
   if python -c "import flash_attn" 2>/dev/null; then
     echo ">>> flash-attn already installed, skipping"
   else
@@ -187,7 +196,7 @@ _setup_groot() {
     pip install "$FLASH_WHEEL"
   fi
 
-  # --- 3e. Clone Isaac-GR00T at n1.6-release ---
+  # --- 3f. Clone Isaac-GR00T at n1.6-release ---
   local GROOT_DIR="$SCRIPT_DIR/Isaac-GR00T"
   if [ -d "$GROOT_DIR/.git" ]; then
     echo ">>> Isaac-GR00T already cloned at $GROOT_DIR"
@@ -203,7 +212,7 @@ _setup_groot() {
       "$GROOT_DIR"
   fi
 
-  # --- 3f. Install gr00t package + remaining dependencies ---
+  # --- 3g. Install gr00t package + remaining dependencies ---
   # DS_BUILD_OPS=0 prevents deepspeed from trying to JIT-compile CUDA ops at
   # install time (the user's nvcc may differ from the runtime CUDA version).
   # --extra-index-url makes nvidia-pypi and pytorch-cu128 available for

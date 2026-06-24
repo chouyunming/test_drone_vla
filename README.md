@@ -8,15 +8,15 @@ forward pass, and prints `INFERENCE OK`. No robot hardware required.
 | Model | Conda env | Checkpoint (auto-download) | Dataset / Obs | Device |
 | --- | --- | --- | --- | --- |
 | **SmolVLA** | `smolvla` | `lerobot/smolvla_base` (~0.5B) | `lerobot/libero` (real frame) | CPU / CUDA |
-| **GR00T-N1.6** | `Isaac-GR00T` | `nvidia/GR00T-N1.6-DROID` (~3B) | synthetic tensor | CUDA recommended |
+| **GR00T-N1.6** | `Isaac-GR00T` | `nvidia/GR00T-N1.6-DROID` (~3B) | synthetic tensor | CUDA required |
 
 ---
 
 ## Prerequisites
 
 - **Ubuntu 24.04 LTS, x86_64.**
-- A GPU is recommended but not required for SmolVLA. GR00T runs on CPU but is
-  very slow without a CUDA GPU.
+- A GPU is recommended but not required for SmolVLA. **GR00T-N1.6 requires a
+  CUDA GPU** — it will refuse to run on CPU.
 - `wget` or `curl`, plus an internet connection (first run downloads several GB).
 - **Python is NOT required up front** — `setup.sh` installs it via Miniconda.
 
@@ -139,10 +139,10 @@ on that setup.
 # SmolVLA — test a finetuned checkpoint
 python test.py --model smolvla --model-id <user>/smolvla_libero_10
 
-# SmolVLA — force CPU
+# SmolVLA — force CPU (GR00T-N1.6 does not support CPU)
 python test.py --model smolvla --device cpu
 
-# GR00T — use the base model + gr1 embodiment
+# GR00T — use the base model + gr1 embodiment (CUDA required)
 python test.py --model groot \
     --model-id nvidia/GR00T-N1.6-3B \
     --embodiment-tag gr1
@@ -189,6 +189,7 @@ python test.py --model groot \
 | `gcc: command not found` | C compiler missing | `sudo apt-get install -y build-essential` |
 | `PackagesNotFoundError: torchvision` | Wrong version constraint in environment.yaml | Already fixed — update to the latest `environment.yaml` |
 | `MKL_INTERFACE_LAYER: unbound variable` during activate | MKL activation script + `set -u` | Already fixed in `setup.sh` — update to the latest version |
+| `ERROR: GR00T-N1.6 requires a CUDA-capable GPU` | No NVIDIA GPU / driver | Install the NVIDIA driver; GR00T-N1.6 does not support CPU |
 | `401 Unauthorized` on GR00T download | NVIDIA license not accepted | Accept at <https://huggingface.co/nvidia/GR00T-N1.6-DROID> |
 | Partial `./miniconda3` blocks reinstall | Interrupted previous run | `rm -rf ./miniconda3` then re-run |
 
