@@ -25,16 +25,20 @@ Usage:
 """
 
 import argparse
+import contextlib
 import logging
+import os
 import sys
 import time
 import warnings
 
-warnings.filterwarnings("ignore", message="`torch_dtype` is deprecated")
+os.environ.setdefault("NO_ALBUMENTATIONS_UPDATE", "1")
+os.environ.setdefault("DS_BUILD_OPS", "0")
+os.environ.setdefault("DS_SKIP_CUDA_CHECK", "1")
 
-logging.getLogger("transformers").addFilter(
-    lambda r: "`torch_dtype` is deprecated" not in r.getMessage()
-)
+warnings.filterwarnings("ignore")
+
+logging.disable(logging.WARNING)
 
 import torch
 
@@ -53,12 +57,12 @@ MODELS: dict[str, dict] = {
         "model_id":       "nvidia/GR00T-N1.6-DROID",
         "embodiment_tag": "oxe_droid",
         # Expected state dims for oxe_droid embodiment:
-        #   joint_position   : (B, T, 6)   — 6-DOF relative joint positions
+        #   joint_position   : (B, T, 7)   — 7-DOF relative joint positions
         #   gripper_position : (B, T, 1)   — gripper open/close
         # Video keys (224×224 RGB, uint8): exterior_image_1_left, wrist_image_left
         # Language key: annotation.language.language_instruction
         "_state_dims": {
-            "joint_position":   6,
+            "joint_position":   7,
             "gripper_position": 1,
         },
     },
@@ -197,8 +201,15 @@ def _run_groot(args, device: torch.device) -> int:
     embodiment_tag = args.embodiment_tag or cfg["embodiment_tag"]
     state_dims: dict[str, int] = cfg["_state_dims"]
 
-    print(f"[1/3] Loading GR00T policy: {model_id}  embodiment={embodiment_tag}  → {device}")
-    policy = _load_groot(model_id, embodiment_tag, str(device))
+    print(f"[1/3] Loading GR00T policy: {model_id}  embodiment={embodiment_tag}  → {device}", flush=True)
+    _devnull = os.open(os.devnull, os.O_WRONLY)
+    _saved_out, _saved_err = os.dup(1), os.dup(2)
+    os.dup2(_devnull, 1); os.dup2(_devnull, 2)
+    try:
+        policy = _load_groot(model_id, embodiment_tag, str(device))
+    finally:
+        os.dup2(_saved_out, 1); os.dup2(_saved_err, 2)
+        os.close(_saved_out); os.close(_saved_err); os.close(_devnull)
 
     print("[2/3] Building synthetic observation")
     obs = _make_groot_obs(policy, state_dims)

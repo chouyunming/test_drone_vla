@@ -23,16 +23,20 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 MODEL="smolvla"   # default
 
-for arg in "$@"; do
-  case "$arg" in
-    --model=*) MODEL="${arg#--model=}" ;;
-    --model)   echo "ERROR: --model requires a value (smolvla|groot)"; exit 1 ;;
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --model=*) MODEL="${1#--model=}"; shift ;;
+    --model)
+      if [[ $# -lt 2 ]]; then
+        echo "ERROR: --model requires a value (smolvla|groot)" >&2; exit 1
+      fi
+      MODEL="$2"; shift 2 ;;
     -h|--help)
       grep '^#' "$0" | sed 's/^# \{0,1\}//'
       exit 0
       ;;
     *)
-      echo "Unknown arg: $arg  (try --help)" >&2
+      echo "Unknown arg: $1  (try --help)" >&2
       exit 1
       ;;
   esac

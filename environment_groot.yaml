@@ -15,4 +15,6 @@ dependencies:
   - pip
   - ffmpeg           # video decoding required by torchcodec
   - git-lfs          # needed to pull parquet/video assets from Isaac-GR00T
-  - build-essential  # C compiler for any native extensions
+  - gcc              # C compiler for native extensions
+  - gxx              # C++ compiler for native extensions
+  - make
