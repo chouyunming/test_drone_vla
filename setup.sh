@@ -11,9 +11,6 @@
 #   smolvla → conda env  : smolvla   (Python 3.11, CUDA 12.1)
 #   groot   → conda env  : Isaac-GR00T     (Python 3.10, CUDA 12.8)
 #             pip-cloned : ./Isaac-GR00T/      (NVIDIA/Isaac-GR00T @ n1.6-release)
-#
-# Optional overrides:
-#   CONDA_DIR=/opt/my-conda bash setup.sh --model smolvla
 # =============================================================================
 
 set -euo pipefail

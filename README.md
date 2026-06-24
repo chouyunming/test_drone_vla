@@ -1,10 +1,5 @@
-# VLA Inference Smoke Test — SmolVLA & GR00T-N1.6
-
-This repo lets **anyone on Ubuntu 24.04 LTS**, starting from a machine with
-**nothing installed**, verify that a Vision-Language-Action (VLA) policy can
-run inference. The test loads pretrained weights and a dataset, runs a single
-forward pass, and prints `INFERENCE OK`. No robot hardware required.
-
+# VLA Inference Test — SmolVLA & GR00T-N1.6
+## Model Card
 | Model | Conda env | Checkpoint (auto-download) | Dataset / Obs | Device |
 | --- | --- | --- | --- | --- |
 | **SmolVLA** | `smolvla` | `lerobot/smolvla_base` (~0.5B) | `lerobot/libero` (real frame) | CPU / CUDA |
@@ -28,7 +23,7 @@ The configuration below was used to develop and validate this repo:
 
 ---
 
-## Software Versions at a Glance
+## Software Version
 
 These are the exact versions pinned per environment — useful if you hit a
 dependency conflict and need to know what "known-good" looks like:
@@ -43,7 +38,7 @@ dependency conflict and need to know what "known-good" looks like:
 | **lerobot** | latest (`lerobot[smolvla]`) | not used |
 | **Isaac-GR00T** | not used | `n1.6-release` branch |
 
-> **Beginner tip:** you do not need to install any of these manually.
+> **Note:** you do not need to install any of these manually.
 > `setup.sh` creates isolated Conda environments and installs the correct
 > versions for you automatically.
 
@@ -57,12 +52,6 @@ dependency conflict and need to know what "known-good" looks like:
 - `wget` or `curl`, plus an internet connection (first run downloads several GB).
 - **Python is NOT required up front** — `setup.sh` installs it via Miniconda.
 
-### GR00T — NVIDIA license
-
-GR00T-N1.6 is released under the **NVIDIA OneWay Non-Commercial License**.
-Accept it on HuggingFace before the first run:
-<https://huggingface.co/nvidia/GR00T-N1.6-DROID>
-
 ---
 
 ## Step 1 — One-shot setup
@@ -71,6 +60,10 @@ Run from the folder containing `setup.sh`. Pass `--model` to choose which
 environment to install:
 
 ```bash
+# Clone this repo
+git clone https://github.com/chouyunming/test_drone_vla.git
+cd test_drone_vla
+
 # SmolVLA only (default)
 bash setup.sh
 
@@ -91,12 +84,6 @@ bash setup.sh --model groot
 > **First-time downloads are large.** SmolVLA: ~10–20 min. GR00T: ~12 GB on
 > first run, allow 20–40 min depending on connection speed.
 
-Optional: install Miniconda into a custom location:
-
-```bash
-CONDA_DIR=/opt/my-conda bash setup.sh --model smolvla
-```
-
 ---
 
 ## Step 2 — Activate the environment
@@ -113,8 +100,6 @@ conda activate smolvla
 source miniconda3/etc/profile.d/conda.sh
 conda activate Isaac-GR00T
 ```
-
-If you used a custom `CONDA_DIR`, replace `miniconda3` with that path.
 
 ---
 
@@ -161,40 +146,12 @@ python test.py --model groot
 A non-zero exit code with `✗ INFERENCE FAILED` means inference could not run
 on that setup.
 
-### Useful overrides
+### Test on CPU (SmolVLA-Only)
 
 ```bash
-# SmolVLA — test a finetuned checkpoint
-python test.py --model smolvla --model-id <user>/smolvla_libero_10
-
 # SmolVLA — force CPU (GR00T-N1.6 does not support CPU)
 python test.py --model smolvla --device cpu
-
-# GR00T — use the base model + gr1 embodiment (CUDA required)
-python test.py --model groot \
-    --model-id nvidia/GR00T-N1.6-3B \
-    --embodiment-tag gr1
 ```
-
----
-
-## What the test actually checks
-
-**SmolVLA** runs the standard LeRobot inference path:
-
-1. `SmolVLAPolicy.from_pretrained(model_id)` — downloads and loads weights.
-2. `make_pre_post_processors(...)` — builds the normalize/tokenize pipeline.
-3. `LeRobotDataset(dataset_id)` — pulls one real frame from a built-in dataset.
-4. `policy.select_action(batch)` — single forward pass returning an action tensor.
-
-**GR00T-N1.6** runs the Isaac-GR00T inference path:
-
-1. `Gr00tPolicy(model_path, embodiment_tag, ...)` — downloads and loads weights.
-2. Synthetic observation dict is built to match the checkpoint's modality config
-   (video: `(B, T, 224, 224, 3)` uint8; state: `(B, T, D)` float32; language string).
-3. `policy.get_action(obs)` — single forward pass returning an action dict.
-
----
 
 ## How isolation works (your system stays untouched)
 
@@ -213,10 +170,7 @@ python test.py --model groot \
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
-| `PackagesNotFoundError: torchvision` | Wrong version constraint in environment.yaml | Already fixed — update to the latest `environment.yaml` |
-| `MKL_INTERFACE_LAYER: unbound variable` during activate | MKL activation script + `set -u` | Already fixed in `setup.sh` — update to the latest version |
 | `ERROR: GR00T-N1.6 requires a CUDA-capable GPU` | No NVIDIA GPU / driver | Install the NVIDIA driver; GR00T-N1.6 does not support CPU |
-| `401 Unauthorized` on GR00T download | NVIDIA license not accepted | Accept at <https://huggingface.co/nvidia/GR00T-N1.6-DROID> |
 | Partial `./miniconda3` blocks reinstall | Interrupted previous run | `rm -rf ./miniconda3` then re-run |
 
 ---
