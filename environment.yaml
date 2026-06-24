@@ -1,4 +1,4 @@
-name: lerobot_vla_test
+name: smolvla
 channels:
   - pytorch
   - nvidia

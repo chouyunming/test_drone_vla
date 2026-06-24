@@ -1,0 +1,18 @@
+name: Isaac-GR00T
+# GR00T-N1.6 environment — Python 3.10 base.
+# Heavy deps (torch==2.7.1+cu128, flash-attn, gr00t) are installed by setup.sh
+# after this env is created, because they require special index URLs and a
+# local clone of NVIDIA/Isaac-GR00T.
+#
+# To create manually:
+#   conda env create -f environment_groot.yaml
+#   # then follow steps printed by: bash setup.sh --model groot
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - ffmpeg           # video decoding required by torchcodec
+  - git-lfs          # needed to pull parquet/video assets from Isaac-GR00T
+  - build-essential  # C compiler for any native extensions
