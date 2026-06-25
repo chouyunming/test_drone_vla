@@ -8,7 +8,7 @@
 #   bash setup.sh --model groot      # GR00T-N1.6 only
 #
 # Environments created:
-#   smolvla → conda env  : smolvla   (Python 3.11, CUDA 12.1)
+#   smolvla → conda env  : smolvla   (Python 3.10, CUDA 12.8)
 #   groot   → conda env  : Isaac-GR00T     (Python 3.10, CUDA 12.8)
 #             pip-cloned : ./Isaac-GR00T/      (NVIDIA/Isaac-GR00T @ n1.6-release)
 # =============================================================================
@@ -77,7 +77,7 @@ _ensure_conda() {
 }
 
 # ---------------------------------------------------------------------------
-# 2. SmolVLA environment (conda, Python 3.11, CUDA 12.1)
+# 2. SmolVLA environment (conda, Python 3.10, CUDA 12.8)
 # ---------------------------------------------------------------------------
 _setup_smolvla() {
   echo ""

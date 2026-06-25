@@ -5,11 +5,11 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.11
+  - python=3.10
   - pip
   - ffmpeg                          # dataset video decoding
-  - pytorch::pytorch>=2.2.1,<2.6.0
-  - pytorch::torchvision>=0.17.0,<0.21.0
+  - pytorch::pytorch>=2.2.1
+  - pytorch::torchvision>=0.17.0
   - pytorch::pytorch-cuda=12.1
   - pip:
     - packaging>=24.2,<26.0
