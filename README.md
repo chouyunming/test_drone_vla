@@ -31,10 +31,10 @@ dependency conflict and need to know what "known-good" looks like:
 | | SmolVLA (`smolvla` env) | GR00T-N1.6 (`Isaac-GR00T` env) |
 | --- | --- | --- |
 | **Python** | 3.10 | 3.10 |
-| **PyTorch** | ≥ 2.2.1, < 2.11.0 | 2.7.1+cu128 |
-| **torchvision** | ≥ 0.21.0, < 0.26.0 | 0.22.1+cu128 |
-| **torchcodec** | ≥ 0.2.1, < 0.11.0 | not used |
-| **CUDA toolkit** | 12.8 (via PyTorch cu128 wheel) | 12.8 (via PyTorch cu128 wheel) |
+| **PyTorch** | 2.10.0 | 2.7.1+cu128 |
+| **torchvision** | 0.25.0 | 0.22.1+cu128 |
+| **torchcodec** | 0.10.0 | not used |
+| **CUDA toolkit** | 12.1 (via PyTorch cu121 wheel) | 12.8 (via PyTorch cu128 wheel) |
 | **flash-attn** | not used | 2.7.4.post1 (prebuilt wheel, Python 3.10 + CUDA 12.8) |
 | **lerobot** | 0.4.4 (`lerobot[smolvla]`) | not used |
 | **Isaac-GR00T** | not used | `n1.6-release` branch (gr00t 0.1.0) |
@@ -77,7 +77,7 @@ bash setup.sh --model groot
 | Step | SmolVLA | GR00T-N1.6 |
 | --- | --- | --- |
 | Miniconda | installs into `./miniconda3` if absent | same |
-| Conda env | creates `smolvla` from `environment.yaml` (Python 3.10, CUDA 12.8) | creates `Isaac-GR00T` from `environment_groot.yaml` (Python 3.10) |
+| Conda env | creates `smolvla` from `environment.yaml` (Python 3.10, CUDA 12.1) | creates `Isaac-GR00T` from `environment_groot.yaml` (Python 3.10) |
 | PyTorch | installed by conda | `torch==2.7.1+cu128` from pytorch-cu128 index |
 | flash-attn | n/a | prebuilt wheel (Python 3.10 + CUDA 12) |
 | GR00T package | n/a | clones `NVIDIA/Isaac-GR00T@n1.6-release`, installs with `pip install -e` |
