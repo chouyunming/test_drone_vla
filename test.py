@@ -1,30 +1,23 @@
 #!/usr/bin/env python
-"""Inference smoke test for VLA policies (SmolVLA and GR00T-N1.6).
+"""Inference smoke test for SmolVLA.
 
-Loads a pretrained policy, builds an observation (real dataset frame for
-SmolVLA, synthetic tensor for GR00T), runs a single forward pass, and
-reports whether inference succeeded.  No robot hardware required.
+Loads a pretrained policy, builds an observation from a real dataset frame,
+runs a single forward pass, and reports whether inference succeeded.
+No robot hardware required.
 
 Usage:
-    # SmolVLA — uses lerobot/smolvla_base + lerobot/libero dataset
-    conda activate lerobot_vla_test
+    conda activate smolvla
     python test.py --model smolvla
 
-    # GR00T-N1.6 — uses nvidia/GR00T-N1.6-DROID + synthetic obs (CUDA required)
-    conda activate groot_vla_test
-    python test.py --model groot
+    # Override checkpoint or dataset
+    python test.py --model smolvla --model-id lerobot/smolvla_base
+    python test.py --model smolvla --dataset lerobot/libero
 
-    # Override checkpoint / embodiment for GR00T
-    python test.py --model groot \\
-        --model-id nvidia/GR00T-N1.6-3B \\
-        --embodiment-tag gr1
-
-    # Force CPU (SmolVLA only — GR00T-N1.6 requires CUDA)
+    # Force CPU
     python test.py --model smolvla --device cpu
 """
 
 import argparse
-import contextlib
 import logging
 import os
 import sys
@@ -32,8 +25,6 @@ import time
 import warnings
 
 os.environ.setdefault("NO_ALBUMENTATIONS_UPDATE", "1")
-os.environ.setdefault("DS_BUILD_OPS", "0")
-os.environ.setdefault("DS_SKIP_CUDA_CHECK", "1")
 
 warnings.filterwarnings("ignore")
 
@@ -46,30 +37,14 @@ import torch
 # ---------------------------------------------------------------------------
 MODELS: dict[str, dict] = {
     "smolvla": {
-        # Open ~0.5 B param VLA from HuggingFace LeRobot
         "model_id": "lerobot/smolvla_base",
         "dataset":  "lerobot/libero",
-    },
-    "groot": {
-        # GR00T-N1.6 fine-tuned on DROID (Franka arm, 6-DOF + gripper).
-        # Override with --model-id nvidia/GR00T-N1.6-3B for the base model.
-        "model_id":       "nvidia/GR00T-N1.6-DROID",
-        "embodiment_tag": "oxe_droid",
-        # Expected state dims for oxe_droid embodiment:
-        #   joint_position   : (B, T, 7)   — 7-DOF relative joint positions
-        #   gripper_position : (B, T, 1)   — gripper open/close
-        # Video keys (224×224 RGB, uint8): exterior_image_1_left, wrist_image_left
-        # Language key: annotation.language.language_instruction
-        "_state_dims": {
-            "joint_position":   7,
-            "gripper_position": 1,
-        },
     },
 }
 
 
 # ---------------------------------------------------------------------------
-# SmolVLA helpers
+# SmolVLA
 # ---------------------------------------------------------------------------
 def _load_smolvla(model_id: str):
     from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
@@ -129,117 +104,6 @@ def _run_smolvla(args, device: torch.device) -> int:
 
 
 # ---------------------------------------------------------------------------
-# GR00T-N1.6 helpers
-# ---------------------------------------------------------------------------
-def _load_groot(model_id: str, embodiment_tag: str, device: str):
-    """Load Gr00tPolicy from a HuggingFace checkpoint or local path."""
-    from gr00t.policy.gr00t_policy import Gr00tPolicy
-    from gr00t.data.embodiment_tags import EmbodimentTag
-
-    # EmbodimentTag values are lower-case strings like "oxe_droid", "gr1", …
-    tag = EmbodimentTag(embodiment_tag.lower())
-
-    policy = Gr00tPolicy(
-        model_path=model_id,
-        embodiment_tag=tag,
-        device=device,
-        strict=True,   # keep strict=True; synthetic obs matches expected shapes
-    )
-    return policy
-
-
-def _make_groot_obs(policy, state_dims: dict[str, int]) -> dict:
-    """Build a synthetic observation dict that matches the policy's modality config.
-
-    Args:
-        policy    : Loaded Gr00tPolicy (used to read modality config).
-        state_dims: Dict mapping each state key → its feature dimension D.
-
-    Returns:
-        Nested observation dict with keys "video", "state", "language".
-    """
-    import numpy as np
-
-    modcfg  = policy.modality_configs           # loaded from checkpoint
-    B       = 1                                  # batch size
-    T_vid   = len(modcfg["video"].delta_indices)
-    T_state = len(modcfg["state"].delta_indices)
-
-    # --- video ---
-    obs_video = {
-        key: np.zeros((B, T_vid, 224, 224, 3), dtype=np.uint8)
-        for key in modcfg["video"].modality_keys
-    }
-
-    # --- state ---
-    # Verify every required state key has a known dimension.
-    for key in modcfg["state"].modality_keys:
-        if key not in state_dims:
-            raise ValueError(
-                f"State key '{key}' is not in the state_dims mapping.  "
-                f"Pass --model groot and check MODELS['groot']['_state_dims'], "
-                f"or override via --model-id with a matching checkpoint."
-            )
-    obs_state = {
-        key: np.zeros((B, T_state, state_dims[key]), dtype=np.float32)
-        for key in modcfg["state"].modality_keys
-    }
-
-    # --- language ---
-    lang_key = modcfg["language"].modality_keys[0]
-    obs_lang = {lang_key: [["pick up the object and place it on the plate"]]}
-
-    return {"video": obs_video, "state": obs_state, "language": obs_lang}
-
-
-def _run_groot(args, device: torch.device) -> int:
-    if device.type != "cuda":
-        print(
-            f"ERROR: GR00T-N1.6 requires a CUDA GPU (got --device {device}).\n"
-            "       Install CUDA drivers and re-run without --device, or pass --device cuda.",
-            file=sys.stderr,
-        )
-        return 1
-
-    import numpy as np
-
-    cfg            = MODELS["groot"]
-    model_id       = args.model_id       or cfg["model_id"]
-    embodiment_tag = args.embodiment_tag or cfg["embodiment_tag"]
-    state_dims: dict[str, int] = cfg["_state_dims"]
-
-    print(f"[1/3] Loading GR00T policy: {model_id}  embodiment={embodiment_tag}  → {device}", flush=True)
-    _devnull = os.open(os.devnull, os.O_WRONLY)
-    _saved_out, _saved_err = os.dup(1), os.dup(2)
-    os.dup2(_devnull, 1); os.dup2(_devnull, 2)
-    try:
-        policy = _load_groot(model_id, embodiment_tag, str(device))
-    finally:
-        os.dup2(_saved_out, 1); os.dup2(_saved_err, 2)
-        os.close(_saved_out); os.close(_saved_err); os.close(_devnull)
-
-    print("[2/3] Building synthetic observation")
-    obs = _make_groot_obs(policy, state_dims)
-
-    print("[3/3] Running get_action")
-    t0 = time.perf_counter()
-    with torch.inference_mode():
-        action, _info = policy.get_action(obs)
-    latency_ms = (time.perf_counter() - t0) * 1000.0
-
-    # action is dict[str, np.ndarray(B, T_action, D)]
-    action_summary = {k: v.shape for k, v in action.items()}
-
-    print("\n✓ INFERENCE OK")
-    print(f"   model          : groot ({model_id})")
-    print(f"   embodiment     : {embodiment_tag}")
-    print(f"   device         : {device}")
-    print(f"   action shapes  : {action_summary}")
-    print(f"   latency        : {latency_ms:.1f} ms")
-    return 0
-
-
-# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main() -> int:
@@ -249,26 +113,17 @@ def main() -> int:
         "--model",
         choices=list(MODELS),
         required=True,
-        help="Which policy to smoke-test: smolvla | groot",
+        help="Policy to smoke-test (smolvla)",
     )
     parser.add_argument(
         "--model-id",
         default=None,
-        help="Override the default HuggingFace checkpoint (e.g. a fine-tuned variant)",
+        help="Override the default HuggingFace checkpoint",
     )
     parser.add_argument(
         "--dataset",
         default=None,
-        help="[smolvla only] Override the built-in LeRobot dataset repo id",
-    )
-    parser.add_argument(
-        "--embodiment-tag",
-        default=None,
-        dest="embodiment_tag",
-        help=(
-            "[groot only] GR00T embodiment tag, e.g. oxe_droid, gr1, libero_panda.  "
-            "Must match the checkpoint you pass via --model-id."
-        ),
+        help="Override the built-in LeRobot dataset repo id",
     )
     parser.add_argument(
         "--device",
@@ -280,13 +135,7 @@ def main() -> int:
     device = torch.device(args.device)
 
     try:
-        if args.model == "smolvla":
-            return _run_smolvla(args, device)
-        elif args.model == "groot":
-            return _run_groot(args, device)
-        else:
-            print(f"ERROR: unknown model '{args.model}'", file=sys.stderr)
-            return 1
+        return _run_smolvla(args, device)
     except Exception as exc:          # noqa: BLE001  — smoke test wants a clean summary
         print(f"\n✗ INFERENCE FAILED: {type(exc).__name__}: {exc}", file=sys.stderr)
         import traceback
