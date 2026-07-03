@@ -1,14 +1,14 @@
 # VLA Inference Test — SmolVLA
+
 ## Model Card
-| Model | Conda env | Checkpoint (auto-download) | Dataset / Obs | Device |
-| --- | --- | --- | --- | --- |
-| **SmolVLA** | `smolvla` | `lerobot/smolvla_base` (~0.5B) | `lerobot/libero` (real frame) | CPU / CUDA |
+
+| Model | Checkpoint (auto-download) | Dataset / Obs | Device |
+| --- | --- | --- | --- |
+| **SmolVLA** | `lerobot/smolvla_base` (~0.5B) | `lerobot/libero` (real frame) | CPU / CUDA |
 
 ---
 
 ## Tested Hardware
-
-The configuration below was used to develop and validate this repo:
 
 | Component | Details |
 | --- | --- |
@@ -22,29 +22,28 @@ The configuration below was used to develop and validate this repo:
 
 ---
 
-## Software Version
+## Software Versions
 
-| | SmolVLA (`smolvla` env) |
+| | SmolVLA |
 | --- | --- |
-| **Python** | 3.10 |
-| **PyTorch** | 2.10.0 |
-| **torchvision** | 0.25.0 |
-| **torchcodec** | 0.10.0 |
-| **CUDA toolkit** | 12.1 (via PyTorch cu121 wheel) |
-| **lerobot** | 0.4.4 (`lerobot[smolvla]`) |
+| **Python** | 3.12 |
+| **PyTorch** | 2.11.0+cu128 |
+| **torchvision** | 0.26.0+cu128 |
+| **CUDA toolkit** | 12.8 |
+| **lerobot** | 0.5.2 (`lerobot[smolvla]`) |
 
 > **Note:** you do not need to install any of these manually.
-> `setup.sh` creates an isolated Conda environment and installs the correct
-> versions for you automatically.
+> `setup.sh` creates an isolated Python virtual environment and installs the correct versions automatically.
 
 ---
 
 ## Prerequisites
 
 - **Ubuntu 24.04 LTS, x86_64.**
-- A GPU is recommended but not required.
+- **Python ≥ 3.12** must already be installed (`python3 --version`).
+- **ffmpeg** must be installed: `sudo apt install ffmpeg`
+- **NVIDIA driver ≥ 570.26** if using GPU (CUDA 12.8 compatibility).
 - `wget` or `curl`, plus an internet connection (first run downloads several GB).
-- **Python is NOT required up front** — `setup.sh` installs it via Miniconda.
 
 ---
 
@@ -53,7 +52,6 @@ The configuration below was used to develop and validate this repo:
 Run from the folder containing `setup.sh`:
 
 ```bash
-# Clone this repo
 git clone https://github.com/chouyunming/test_drone_vla.git
 cd test_drone_vla
 
@@ -64,21 +62,19 @@ bash setup.sh
 
 | Step | Action |
 | --- | --- |
-| Miniconda | installs into `./miniconda3` if absent |
-| Conda env | creates `smolvla` from `environment.yaml` (Python 3.10, CUDA 12.1) |
-| PyTorch | installed by conda |
+| Sanity check | Verifies Python ≥ 3.12 |
+| Virtual env | Creates `.venv/` via `python3 -m venv` |
+| Dependencies | `pip install -r requirements-smolvla-edge-inference.txt` (CUDA 12.8 torch) |
+| lerobot | `pip install --no-deps lerobot[smolvla]==0.5.2` |
 
-> **First-time download is large.** SmolVLA: ~10–20 min depending on connection speed.
+> **First-time download is large.** Expect ~10–20 min depending on connection speed.
 
 ---
 
 ## Step 2 — Activate the environment
 
-`setup.sh` does **not** modify `~/.bashrc`. Activate manually in each new terminal:
-
 ```bash
-source miniconda3/etc/profile.d/conda.sh
-conda activate smolvla
+source .venv/bin/activate
 ```
 
 ---
@@ -86,10 +82,11 @@ conda activate smolvla
 ## Step 3 — Run the test
 
 ```bash
-# SmolVLA (CPU works; GPU is faster)
+# Auto-detects GPU; falls back to CPU if unavailable
 python test.py --model smolvla
 
-# Force CPU
+# Explicit device selection
+python test.py --model smolvla --device cuda
 python test.py --model smolvla --device cpu
 ```
 
@@ -110,14 +107,14 @@ python test.py --model smolvla --device cpu
 
 A non-zero exit code with `✗ INFERENCE FAILED` means inference could not run on that setup.
 
+---
+
 ## How isolation works (your system stays untouched)
 
-- Miniconda installs into `./miniconda3` inside the project directory by
-  default (or your `CONDA_DIR`).
-- `setup.sh` does **not** run `conda init`, so `~/.bashrc` is never modified.
-- To remove everything, delete the Miniconda directory:
+- `setup.sh` creates `.venv/` inside the project directory — nothing is installed system-wide.
+- To remove everything, delete the venv:
   ```bash
-  rm -rf miniconda3
+  rm -rf .venv
   ```
 
 ---
@@ -126,7 +123,10 @@ A non-zero exit code with `✗ INFERENCE FAILED` means inference could not run o
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
-| Partial `./miniconda3` blocks reinstall | Interrupted previous run | `rm -rf ./miniconda3` then re-run |
+| `python3: command not found` | Python 3.12 not installed | `sudo apt install python3.12 python3.12-venv` |
+| `ffmpeg: command not found` | ffmpeg missing | `sudo apt install ffmpeg` |
+| CUDA errors at runtime | Driver / toolkit mismatch | Ensure NVIDIA driver ≥ 570.26; run with `--device cpu` to verify CPU path works |
+| Partial `.venv` blocks reinstall | Interrupted previous run | `rm -rf .venv` then re-run `bash setup.sh` |
 
 ---
 
@@ -134,10 +134,9 @@ A non-zero exit code with `✗ INFERENCE FAILED` means inference could not run o
 
 | File | Purpose |
 | --- | --- |
-| `setup.sh` | One-shot installer: Miniconda + `smolvla` conda env |
-| `environment.yaml` | Conda env for SmolVLA (Python 3.10, CUDA 12.8, lerobot) |
-| `test.py` | Inference smoke test (`--model smolvla`) |
-| `requirements-smolvla-edge-inference.txt` | Pinned pip deps for edge/CPU inference deployment |
+| `setup.sh` | One-shot installer: creates `.venv` and installs all dependencies |
+| `requirements-smolvla-edge-inference.txt` | Pinned pip deps (CUDA 12.8 torch + lerobot transitive deps) |
+| `test.py` | Inference smoke test (`--model smolvla [--device cpu\|cuda]`) |
 
 ---
 

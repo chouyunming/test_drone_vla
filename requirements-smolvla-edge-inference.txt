@@ -3,6 +3,7 @@
 # dataset loading/recording, PEFT, and robot-hardware extras (feetech, dynamixel, etc.).
 # Regenerate with: uv export --extra smolvla --no-dev --no-hashes --format requirements-txt
 # then drop datasets/dataset-loading and accelerate (not imported by the inference path; see below).
+--extra-index-url https://download.pytorch.org/whl/cu128
 #
 # NOTE: this assumes x86_64. On ARM edge boards (Jetson/Tegra), standard PyPI
 # torch/torchvision wheels generally do NOT install -- use NVIDIA's Jetson
@@ -81,8 +82,8 @@ sympy==1.14.0
 termcolor==3.3.0
 tokenizers==0.22.2
 toml==0.10.2
-torch==2.11.0  # default (CPU)
-torchvision==0.26.0  # default (CPU)
+# torch==2.11.0        # CPU-only (mutually exclusive with cu128 lines below)
+# torchvision==0.26.0  # CPU-only
 tqdm==4.68.2
 transformers==5.5.4
 typer==0.25.1
@@ -90,10 +91,10 @@ typing-extensions==4.15.0
 typing-inspect==0.9.0
 urllib3==2.7.0
 
-# ---- Optional: CUDA acceleration (only if target device has an NVIDIA GPU) ----
-# Use instead of the torch/torchvision lines above if CUDA is available.
-# torch==2.11.0+cu128
-# torchvision==0.26.0+cu128
+# ---- CUDA acceleration (requires NVIDIA GPU + driver >= 570.26 for CUDA 12.8) ----
+# Mutually exclusive with the CPU-only torch lines above.
+torch==2.11.0+cu128
+torchvision==0.26.0+cu128
 cuda-bindings==12.9.7
 cuda-pathfinder==1.5.5
 cuda-toolkit==12.8.1
