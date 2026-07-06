@@ -58,7 +58,7 @@ bash setup.sh
 | Step | Action |
 | --- | --- |
 | Sanity check | Verifies Python ≥ 3.12 |
-| Virtual env | Creates `.venv/` via `python3 -m venv` |
+| Virtual env | Creates `smolvla_venv/` via `python3 -m venv` |
 | Dependencies | `pip install -r requirements-smolvla-edge-inference.txt` (CPU-only torch) |
 | lerobot | `pip install --no-deps lerobot[smolvla]==0.5.2` |
 
@@ -69,7 +69,7 @@ bash setup.sh
 ## Step 2 — Activate the environment
 
 ```bash
-source .venv/bin/activate
+source smolvla_venv/bin/activate
 ```
 
 ---
@@ -101,10 +101,10 @@ A non-zero exit code with `✗ INFERENCE FAILED` means inference could not run o
 
 ## How isolation works (your system stays untouched)
 
-- `setup.sh` creates `.venv/` inside the project directory — nothing is installed system-wide.
+- `setup.sh` creates `smolvla_venv/` inside the project directory — nothing is installed system-wide.
 - To remove everything, delete the venv:
   ```bash
-  rm -rf .venv
+  rm -rf smolvla_venv
   ```
 
 ---
@@ -115,7 +115,7 @@ A non-zero exit code with `✗ INFERENCE FAILED` means inference could not run o
 | --- | --- | --- |
 | `python3: command not found` | Python 3.12 not installed | `sudo apt install python3.12 python3.12-venv` |
 | `ffmpeg: command not found` | ffmpeg missing | `sudo apt install ffmpeg` |
-| Partial `.venv` blocks reinstall | Interrupted previous run | `rm -rf .venv` then re-run `bash setup.sh` |
+| Partial `smolvla_venv` blocks reinstall | Interrupted previous run | `rm -rf smolvla_venv` then re-run `bash setup.sh` |
 
 ---
 
@@ -123,7 +123,7 @@ A non-zero exit code with `✗ INFERENCE FAILED` means inference could not run o
 
 | File | Purpose |
 | --- | --- |
-| `setup.sh` | One-shot installer: creates `.venv` and installs all dependencies |
+| `setup.sh` | One-shot installer: creates `smolvla_venv` and installs all dependencies |
 | `requirements-smolvla-edge-inference.txt` | Pinned pip deps (CPU-only torch + lerobot transitive deps) |
 | `test.py` | Inference smoke test (`--model smolvla`, CPU-only) |
 

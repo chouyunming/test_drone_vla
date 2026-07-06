@@ -5,7 +5,7 @@
 # Usage:
 #   bash setup.sh
 #
-# Creates .venv/ in the project directory.
+# Creates smolvla_venv/ in the project directory.
 # Prerequisites (must be present before running):
 #   - python3 >= 3.12
 #   - ffmpeg  (apt install ffmpeg)
@@ -14,7 +14,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VENV_DIR="$SCRIPT_DIR/.venv"
+VENV_DIR="$SCRIPT_DIR/smolvla_venv"
 
 # ---------------------------------------------------------------------------
 # 1. Sanity checks
