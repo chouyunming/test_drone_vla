@@ -53,7 +53,7 @@ echo ">>> Installing requirements"
 "$PIP" install -r "$SCRIPT_DIR/requirements-smolvla-edge-inference.txt"
 
 echo ">>> Installing lerobot (no-deps: all dependencies already pinned above)"
-"$PIP" install --no-deps 'lerobot[smolvla]==0.5.2'
+"$PIP" install --no-deps 'lerobot[smolvla]'
 "$PIP" install --no-deps 'lerobot[dataset]'
 
 # ---------------------------------------------------------------------------
@@ -68,8 +68,8 @@ Activate:
   source $VENV_DIR/bin/activate
 
 Run the SmolVLA test:
-  python test.py --model smolvla               # auto-detects GPU
-  python test.py --model smolvla --device cuda
-  python test.py --model smolvla --device cpu
+  python test.py               # auto-detects GPU
+  python test.py --device cuda
+  python test.py --device cpu
 ============================================================
 DONE
