@@ -7,7 +7,7 @@ No robot hardware required.
 
 Usage:
     conda activate smolvla
-    python test.py --model smolvla
+    python test.py
 
     # Override checkpoint or dataset
     python test.py --model smolvla --model-id lerobot/smolvla_base
@@ -109,7 +109,7 @@ def main() -> int:
     parser.add_argument(
         "--model",
         choices=list(MODELS),
-        required=True,
+        default='smolvla',
         help="Policy to smoke-test (smolvla)",
     )
     parser.add_argument(
