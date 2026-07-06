@@ -53,8 +53,8 @@ echo ">>> Installing requirements"
 "$PIP" install -r "$SCRIPT_DIR/requirements-smolvla-edge-inference.txt"
 
 echo ">>> Installing lerobot (no-deps: all dependencies already pinned above)"
-"$PIP" install --no-deps 'lerobot[smolvla]'
-"$PIP" install --no-deps 'lerobot[dataset]'
+"$PIP" install --no-deps 'lerobot[smolvla] @ git+https://github.com/huggingface/lerobot.git@main'
+"$PIP" install --no-deps 'lerobot[dataset] @ git+https://github.com/huggingface/lerobot.git@main'
 
 # ---------------------------------------------------------------------------
 # 4. Done

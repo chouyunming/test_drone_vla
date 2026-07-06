@@ -29,8 +29,8 @@
 | **Python** | 3.12 |
 | **PyTorch** | 2.11.0+cu128 (or CPU-only) |
 | **torchvision** | 0.26.0+cu128 (or CPU-only) |
-| **CUDA toolkit** | 12.8 (optional, GPU only) |
-| **lerobot** | 0.5.2 (`lerobot[smolvla]`) |
+| **CUDA toolkit** | 12.8 (optional, GPU only; installed via `--extra-index-url https://download.pytorch.org/whl/cu128`) |
+| **lerobot** | latest `main` (`lerobot[smolvla]`, `lerobot[dataset]`; installed from `git+https://github.com/huggingface/lerobot.git@main`) |
 
 > **Note:** you do not need to install any of these manually.
 > `setup.sh` creates an isolated Python virtual environment and installs the correct versions automatically.
@@ -65,7 +65,7 @@ bash setup.sh
 | Sanity check | Verifies Python ≥ 3.12 |
 | Virtual env | Creates `smolvla_venv/` via `python3 -m venv` |
 | Dependencies | `pip install -r requirements-smolvla-edge-inference.txt` (CPU-only torch by default; CUDA 12.8 torch available) |
-| lerobot | `pip install --no-deps lerobot[smolvla]==0.5.2` |
+| lerobot | `pip install --no-deps 'lerobot[smolvla] @ git+https://github.com/huggingface/lerobot.git@main'` and `lerobot[dataset]` (same source) |
 
 > **First-time download is large.** Expect ~10–20 min depending on connection speed.
 
@@ -83,11 +83,15 @@ source smolvla_venv/bin/activate
 
 ```bash
 # Auto-detects GPU; falls back to CPU if unavailable
-python test.py --model smolvla
+python test.py
+
+# Override checkpoint or dataset
+python test.py --model-id lerobot/smolvla_base
+python test.py --dataset lerobot/libero
 
 # Explicit device selection
-python test.py --model smolvla --device cuda
-python test.py --model smolvla --device cpu
+python test.py --device cuda
+python test.py --device cpu
 ```
 
 ### Expected output
@@ -136,7 +140,7 @@ A non-zero exit code with `✗ INFERENCE FAILED` means inference could not run o
 | --- | --- |
 | `setup.sh` | One-shot installer: creates `smolvla_venv` and installs all dependencies |
 | `requirements-smolvla-edge-inference.txt` | Pinned pip deps (CPU-only torch by default, CUDA 12.8 torch optional + lerobot transitive deps) |
-| `test.py` | Inference smoke test (`--model smolvla [--device cpu\|cuda]`) |
+| `test.py` | Inference smoke test (`[--model-id ID] [--dataset ID] [--device cpu\|cuda]`) |
 
 ---
 

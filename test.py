@@ -6,16 +6,16 @@ runs a single forward pass, and reports whether inference succeeded.
 No robot hardware required.
 
 Usage:
-    conda activate smolvla
+    source smolvla_venv/bin/activate
     python test.py
 
     # Override checkpoint or dataset
-    python test.py --model smolvla --model-id lerobot/smolvla_base
-    python test.py --model smolvla --dataset lerobot/libero
+    python test.py --model-id lerobot/smolvla_base
+    python test.py --dataset lerobot/libero
 
     # Explicit device selection
-    python test.py --model smolvla --device cuda
-    python test.py --model smolvla --device cpu
+    python test.py --device cuda
+    python test.py --device cpu
 """
 
 import argparse
