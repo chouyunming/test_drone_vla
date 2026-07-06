@@ -9,7 +9,6 @@
 # Prerequisites (must be present before running):
 #   - python3 >= 3.12
 #   - ffmpeg  (apt install ffmpeg)
-#   - NVIDIA driver >= 570.26  (for CUDA 12.8)
 # =============================================================================
 
 set -euo pipefail
@@ -53,7 +52,7 @@ echo ">>> Installing requirements"
 "$PIP" install -r "$SCRIPT_DIR/requirements-smolvla-edge-inference.txt"
 
 echo ">>> Installing lerobot (no-deps: all dependencies already pinned above)"
-"$PIP" install --no-deps "lerobot[smolvla]==0.5.2"
+"$PIP" install --no-deps "git+https://github.com/huggingface/lerobot.git@052d3294"
 
 # ---------------------------------------------------------------------------
 # 4. Done
@@ -67,8 +66,6 @@ Activate:
   source $VENV_DIR/bin/activate
 
 Run the SmolVLA test:
-  python test.py --model smolvla               # auto-detects GPU
-  python test.py --model smolvla --device cuda
-  python test.py --model smolvla --device cpu
+  python test.py --model smolvla
 ============================================================
 DONE

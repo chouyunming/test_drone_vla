@@ -1,7 +1,6 @@
 name: smolvla
 channels:
   - pytorch
-  - nvidia
   - conda-forge
   - defaults
 dependencies:
@@ -10,7 +9,7 @@ dependencies:
   - ffmpeg                          # dataset video decoding
   - pytorch::pytorch>=2.2.1
   - pytorch::torchvision>=0.17.0
-  - pytorch::pytorch-cuda=12.1
+  - pytorch::cpuonly
   - pip:
     - packaging>=24.2,<26.0
     - "lerobot[smolvla]"

@@ -12,9 +12,6 @@ Usage:
     # Override checkpoint or dataset
     python test.py --model smolvla --model-id lerobot/smolvla_base
     python test.py --model smolvla --dataset lerobot/libero
-
-    # Force CPU
-    python test.py --model smolvla --device cpu
 """
 
 import argparse
@@ -125,14 +122,9 @@ def main() -> int:
         default=None,
         help="Override the built-in LeRobot dataset repo id",
     )
-    parser.add_argument(
-        "--device",
-        default="cuda" if torch.cuda.is_available() else "cpu",
-        help="cuda | cpu | mps  (default: cuda if available)",
-    )
     args = parser.parse_args()
 
-    device = torch.device(args.device)
+    device = torch.device("cpu")
 
     try:
         return _run_smolvla(args, device)
