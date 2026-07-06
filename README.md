@@ -67,8 +67,6 @@ bash setup.sh
 | Dependencies | `pip install -r requirements-smolvla-edge-inference.txt` (CPU-only torch by default; CUDA 12.8 torch available) |
 | lerobot | `pip install --no-deps 'lerobot[smolvla] @ git+https://github.com/huggingface/lerobot.git@main'` and `lerobot[dataset]` (same source) |
 
-> **First-time download is large.** Expect ~10–20 min depending on connection speed.
-
 ---
 
 ## Step 2 — Activate the environment
