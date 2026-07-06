@@ -9,6 +9,7 @@
 # Prerequisites (must be present before running):
 #   - python3 >= 3.12
 #   - ffmpeg  (apt install ffmpeg)
+#   - NVIDIA driver >= 570.26  (for CUDA 12.8, if using GPU)
 # =============================================================================
 
 set -euo pipefail
@@ -67,6 +68,8 @@ Activate:
   source $VENV_DIR/bin/activate
 
 Run the SmolVLA test:
-  python test.py --model smolvla
+  python test.py --model smolvla               # auto-detects GPU
+  python test.py --model smolvla --device cuda
+  python test.py --model smolvla --device cpu
 ============================================================
 DONE
